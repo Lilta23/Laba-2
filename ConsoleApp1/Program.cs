@@ -1,54 +1,145 @@
 ﻿
 using System;
-using System.IO;
-using Newtonsoft.Json;
+
+public class Triangle
+{
+    // Вершини трикутника
+    private Point[] vertices;
+
+    // Конструктор для створення трикутника за координатами вершин
+    public Triangle(Point[] vertices)
+    {
+        if (vertices.Length != 3)
+            throw new ArgumentException("Triangle must have exactly 3 vertices.");
+
+        this.vertices = vertices;
+    }
+
+    // Метод для обчислення площі трикутника
+    public double Area()
+    {
+        double a = vertices[0].DistanceTo(vertices[1]);
+        double b = vertices[1].DistanceTo(vertices[2]);
+        double c = vertices[2].DistanceTo(vertices[0]);
+        double s = (a + b + c) / 2; // Півпериметр
+        return Math.Sqrt(s * (s - a) * (s - b) * (s - c));
+    }
+
+    // Метод для обчислення периметра трикутника
+    public double Perimeter()
+    {
+        double a = vertices[0].DistanceTo(vertices[1]);
+        double b = vertices[1].DistanceTo(vertices[2]);
+        double c = vertices[2].DistanceTo(vertices[0]);
+        return a + b + c;
+    }
+
+    // Метод для визначення типу трикутника
+    public string Type()
+    {
+        double a = vertices[0].DistanceTo(vertices[1]);
+        double b = vertices[1].DistanceTo(vertices[2]);
+        double c = vertices[2].DistanceTo(vertices[0]);
+        if (a == b && b == c)
+            return "Рівносторонній";
+        else if (a == b || b == c || c == a)
+            return "Рівнобедрений";
+        else
+        {
+            double[] sides = { a, b, c };
+            Array.Sort(sides);
+            if (sides[2] * sides[2] < sides[0] * sides[0] + sides[1] * sides[1])
+                return "Гострокутний";
+            else if (sides[2] * sides[2] == sides[0] * sides[0] + sides[1] * sides[1])
+                return "Прямокутний";
+            else
+                return "Тупокутний";
+        }
+    }
+
+    // Метод для порівняння трикутників
+    public bool Equals(Triangle other)
+    {
+        // Порівнюємо координати кожної вершини двох трикутників
+        for (int i = 0; i < 3; i++)
+        {
+            if (!vertices[i].Equals(other.vertices[i]))
+                return false;
+        }
+        return true;
+    }
+}
+
+// Клас для представлення точки на площині
+public class Point
+{
+    public double X { get; }
+    public double Y { get; }
+
+    public Point(double x, double y)
+    {
+        X = x;
+        Y = y;
+    }
+
+    // Метод для обчислення відстані між двома точками
+    public double DistanceTo(Point other)
+    {
+        double dx = X - other.X;
+        double dy = Y - other.Y;
+        return Math.Sqrt(dx * dx + dy * dy);
+    }
+
+    // Метод для порівняння точок
+    public bool Equals(Point other)
+    {
+        return X == other.X && Y == other.Y;
+    }
+}
 
 class Program
 {
     static void Main(string[] args)
     {
-        // Створення об'єкту класу Triangle
-        var vertices = new[] { new[] { 0, 0 }, new[] { 3, 0 }, new[] { 0, 4 } };
-        var triangle = new { Vertices = vertices };
+        // Введення координат вершин трикутника з консолі
+        Console.WriteLine("Введіть координати вершин трикутника:");
+        Point[] vertices = new Point[3];
+        for (int i = 0; i < 3; i++)
+        {
+            Console.Write($"X координата вершини {i + 1}: ");
+            double x = Convert.ToDouble(Console.ReadLine());
+            Console.Write($"Y координата вершини {i + 1}: ");
+            double y = Convert.ToDouble(Console.ReadLine());
+            vertices[i] = new Point(x, y);
+        }
 
-        // Серіалізація об'єкту у JSON рядок
-        string json = JsonConvert.SerializeObject(triangle);
+        // Створення об'єкта трикутника за введеними координатами
+        Triangle triangle = new Triangle(vertices);
 
-        // Збереження JSON у файл
-        string filePath = @"C:\Users\usertop\Desktop\test.json";
-        File.WriteAllText(filePath, json);
-        Console.WriteLine("Triangle object serialized and saved to file: " + filePath);
+        // Виведення властивостей трикутника
+        Console.WriteLine("Площа трикутника: " + triangle.Area());
+        Console.WriteLine("Периметр трикутника: " + triangle.Perimeter());
+        Console.WriteLine("Тип трикутника: " + triangle.Type());
 
-        // Читання JSON з файлу
-        string jsonFromFile = File.ReadAllText(filePath);
+        // Введення координат вершин другого трикутника з консолі
+        Console.WriteLine("\nВведіть координати вершин другого трикутника:");
+        Point[] vertices2 = new Point[3];
+        for (int i = 0; i < 3; i++)
+        {
+            Console.Write($"X координата вершини {i + 1}: ");
+            double x = Convert.ToDouble(Console.ReadLine());
+            Console.Write($"Y координата вершини {i + 1}: ");
+            double y = Convert.ToDouble(Console.ReadLine());
+            vertices2[i] = new Point(x, y);
+        }
 
-        // Десеріалізація JSON у об'єкт
-        var deserializedTriangle = JsonConvert.DeserializeObject<dynamic>(jsonFromFile);
+        // Створення другого об'єкта трикутника за введеними координатами
+        Triangle triangle2 = new Triangle(vertices2);
 
-        // Виведення типу трикутника
-        Console.WriteLine("Deserialized triangle type: " + GetTriangleType(deserializedTriangle.Vertices));
-    }
-
-    // Метод для визначення типу трикутника
-    static string GetTriangleType(int[][] vertices)
-    {
-        double a = Math.Sqrt(Math.Pow(vertices[1][0] - vertices[0][0], 2) + Math.Pow(vertices[1][1] - vertices[0][1], 2));
-        double b = Math.Sqrt(Math.Pow(vertices[2][0] - vertices[1][0], 2) + Math.Pow(vertices[2][1] - vertices[1][1], 2));
-        double c = Math.Sqrt(Math.Pow(vertices[0][0] - vertices[2][0], 2) + Math.Pow(vertices[0][1] - vertices[2][1], 2));
-
-        if (a == b && b == c)
-            return "Рівносторонній";
-        else if (a == b || b == c || c == a)
-            return "Рівнобедрений";
-        else if (Math.Pow(c, 2) == Math.Pow(a, 2) + Math.Pow(b, 2) ||
-                 Math.Pow(a, 2) == Math.Pow(b, 2) + Math.Pow(c, 2) ||
-                 Math.Pow(b, 2) == Math.Pow(c, 2) + Math.Pow(a, 2))
-            return "Прямокутний";
-        else if (Math.Pow(c, 2) < Math.Pow(a, 2) + Math.Pow(b, 2) &&
-                 Math.Pow(a, 2) < Math.Pow(b, 2) + Math.Pow(c, 2) &&
-                 Math.Pow(b, 2) < Math.Pow(c, 2) + Math.Pow(a, 2))
-            return "Гострокутний";
+        // Порівняння двох трикутників
+        if (triangle.Equals(triangle2))
+            Console.WriteLine("\nТрикутники ідентичні.");
         else
-            return "Тупокутний";
+            Console.WriteLine("\nТрикутники різні.");
     }
 }
